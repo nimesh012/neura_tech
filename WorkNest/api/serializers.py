@@ -27,3 +27,20 @@ class JobLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobLocation
         fields = '__all__'
+
+
+class JobApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobApplication
+        fields = '__all__'
+
+
+class SavedJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedJob
+        fields = '__all__'
+
+class SavedCandidateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedCandidate
+        fields = '__all__'

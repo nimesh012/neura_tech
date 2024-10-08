@@ -136,12 +136,15 @@ class JobPost(models.Model):
     recruiter = models.ForeignKey(RecruiterProfile, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    location = models.CharField(max_length=100)
+    location = models.ForeignKey(JobLocation, on_delete=models.SET_NULL, null=True, blank=True)  # ForeignKey to JobLocation model
     employment_type = models.ForeignKey(EmploymentType, on_delete=models.SET_NULL, null=True, blank=True)
     experience_required = models.CharField(max_length=50, null=True, blank=True)  # e.g., 2-4 years
     salary_range = models.CharField(max_length=100, null=True, blank=True)  # e.g., $60,000 - $80,000
     posted_on = models.DateTimeField(null = True, blank = True)
     application_deadline = models.DateField(null=True, blank=True)
+    required_skills = models.ManyToManyField("Skill", blank=True)
+    good_to_have_skills = models.ManyToManyField("Skill", blank=True,related_name='good_to_have_skills')
+
     status = models.ForeignKey(JobStatus, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
@@ -149,7 +152,40 @@ class JobPost(models.Model):
         db_table ='job_post'
 
 
+class JobApplicationStatus(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'job_application_status'
+
+class JobApplication(models.Model):
+    job = models.ForeignKey(JobPost, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(CandidateProfile, on_delete=models.CASCADE)
+    status = models.ForeignKey(JobApplicationStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    applied_on = models.DateTimeField(null = True, blank = True)
+
+    class Meta:
+        ordering = ['-applied_on']
+        db_table = 'job_application'
 
 
+class SavedJob(models.Model):
+    candidate = models.ForeignKey(CandidateProfile, on_delete=models.CASCADE, related_name='saved_jobs')
+    job_post = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='saved_by_candidates')
+    saved_on = models.DateTimeField(auto_now_add=True)
 
- 
+    class Meta:
+        unique_together = ('candidate', 'job_post')  # Prevent saving the same job more than once
+        db_table = 'saved_jobs'
+
+
+class SavedCandidate(models.Model):
+    recruiter = models.ForeignKey(RecruiterProfile, on_delete=models.CASCADE, related_name='saved_candidates')
+    job_post = models.ForeignKey(JobPost, on_delete=models.CASCADE,related_name='job_post')
+    candidate = models.ForeignKey(CandidateProfile, on_delete=models.CASCADE, related_name='saved_by_recruiters')
+    saved_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('recruiter', 'candidate')  # Prevent saving the same candidate more than once
+        db_table = 'saved_candidates'
+
